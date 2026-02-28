@@ -20,3 +20,7 @@ data/sqlite/*
 data/exports/*
 !data/sqlite/.gitkeep
 !data/exports/.gitkeep
+
+# env files
+.env
+production/backend/.env

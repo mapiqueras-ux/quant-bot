@@ -1,11 +1,15 @@
 import os
 import secrets
-from datetime import datetime, timezone
+import sqlite3
 
+from datetime import datetime, timezone
+from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, Field
-
 from app.db import init_db, insert_event
+from pathlib import Path
+
+load_dotenv()
 
 app = FastAPI(title="quant-bot backend", version="0.1.0")
 
@@ -54,3 +58,24 @@ def tradingview_webhook(
     require_api_key(x_api_key)
     insert_event(evt)
     return {"status": "accepted", "event_id": evt.event_id}
+
+
+@app.get("/admin/events")
+def list_events(limit: int = 10):
+    db_path = Path(__file__).resolve().parents[3] / "data" / "sqlite" / "quantbot.db"
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute(
+            "SELECT event_id, strategy_id, event_type, symbol, received_at FROM trade_events ORDER BY id DESC LIMIT ?",
+            (limit,),
+        ).fetchall()
+
+    return [
+        {
+            "event_id": r[0],
+            "strategy_id": r[1],
+            "event_type": r[2],
+            "symbol": r[3],
+            "received_at": r[4],
+        }
+        for r in rows
+    ]
