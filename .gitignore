@@ -1,3 +1,22 @@
-
 # macOS
 .DS_Store
+
+# Python / tooling
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# VS Code
+.vscode/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local data (keep only placeholders)
+data/sqlite/*
+data/exports/*
+!data/sqlite/.gitkeep
+!data/exports/.gitkeep
