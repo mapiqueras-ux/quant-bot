@@ -14,6 +14,8 @@ API_KEY = os.getenv("API_KEY")
 
 class TradingViewEvent(BaseModel):
     schema_version: str = Field(default="1.0")
+    source: str = Field(default="tradingview")
+    strategy_id: str | None = None
     event_id: str
     event_type: str
     symbol: str
