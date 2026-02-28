@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 from fastapi import FastAPI
 from pydantic import BaseModel, Field
-from datetime import datetime, timezone
+
+from app.db import init_db, insert_event
 
 app = FastAPI(title="quant-bot backend", version="0.1.0")
 
@@ -15,6 +18,11 @@ class TradingViewEvent(BaseModel):
     payload: dict = Field(default_factory=dict)
 
 
+@app.on_event("startup")
+def startup_event():
+    init_db()
+
+
 @app.get("/health")
 def health():
     return {"status": "ok", "ts": datetime.now(timezone.utc).isoformat()}
@@ -22,5 +30,5 @@ def health():
 
 @app.post("/webhook/tradingview")
 def tradingview_webhook(evt: TradingViewEvent):
-    # For now: just acknowledge. Next step: persist to SQLite with idempotency on event_id.
+    insert_event(evt)
     return {"status": "accepted", "event_id": evt.event_id}
