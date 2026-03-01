@@ -9,3 +9,5 @@ This repository is structured in three layers:
 - `incubator/` → Experimental features not yet promoted
 - `research/` → Quant analysis, experiments, notebooks
 - `incubator/python/` → Initial bootstrap Python project (sandbox)
+
+See Vision: Argos as a Convexity Research Lab
