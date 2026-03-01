@@ -7,9 +7,24 @@ from urllib.parse import urlparse
 
 import psycopg
 
+DBPY_SIGNATURE = "db.py loaded (schema v1, robust root)"
 
-BASE_DIR = Path(__file__).resolve().parents[3]
-SQLITE_PATH = BASE_DIR / "data" / "sqlite" / "quantbot.db"
+
+def _find_repo_root() -> Path:
+    """
+    Find repo root by walking upwards until we see production/backend.
+    Works locally and in Railway build containers.
+    """
+    p = Path(__file__).resolve()
+    for parent in p.parents:
+        if (parent / "production" / "backend").exists():
+            return parent
+    # Fallback: backend/app -> backend
+    return p.parents[1]
+
+
+REPO_ROOT = _find_repo_root()
+SQLITE_PATH = REPO_ROOT / "data" / "sqlite" / "quantbot.db"
 
 DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
@@ -35,12 +50,18 @@ def insert_event(evt) -> None:
         _insert_sqlite(evt)
 
 
+def _sqlite_path() -> Path:
+    # Path for local dev / fallback when DATABASE_URL is not Postgres
+    return SQLITE_PATH
+
+
 # -----------------------
 # SQLite
 # -----------------------
 def _sqlite_conn():
-    SQLITE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    return sqlite3.connect(SQLITE_PATH)
+    path = _sqlite_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return sqlite3.connect(path)
 
 
 def _init_sqlite() -> None:

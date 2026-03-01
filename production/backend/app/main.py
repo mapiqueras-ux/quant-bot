@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, status
 from pydantic import BaseModel, Field
 from app.db import init_db, insert_event
-from pathlib import Path
 
 load_dotenv()
 
@@ -62,7 +61,10 @@ def tradingview_webhook(
 
 @app.get("/admin/events")
 def list_events(limit: int = 10):
-    db_path = Path(__file__).resolve().parents[3] / "data" / "sqlite" / "quantbot.db"
+    from app.db import SQLITE_PATH
+
+    db_path = SQLITE_PATH
+
     with sqlite3.connect(db_path) as conn:
         rows = conn.execute(
             "SELECT event_id, strategy_id, event_type, symbol, received_at FROM trade_events ORDER BY id DESC LIMIT ?",
