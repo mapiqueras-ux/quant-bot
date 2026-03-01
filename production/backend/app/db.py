@@ -139,25 +139,30 @@ def _init_postgres() -> None:
 
 
 def _insert_postgres(evt) -> None:
-    payload_json = evt.payload  # keep as native dict -> JSONB
-    with _pg_conn() as conn:
+    received_at = datetime.now(timezone.utc).isoformat()
+    payload_json = json.dumps(evt.payload, separators=(",", ":"), ensure_ascii=False)
+
+    with psycopg.connect(DATABASE_URL) as conn:
         conn.execute(
             """
-            INSERT INTO trade_events
-            (event_id, schema_version, source, strategy_id, event_type, symbol, timeframe, ts_utc, payload_json, received_at)
+            INSERT INTO trade_events (
+                event_id, schema_version, source, strategy_id,
+                event_type, symbol, timeframe, ts_utc,
+                payload_json, received_at
+            )
             VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-            ON CONFLICT (event_id) DO NOTHING;
+            ON CONFLICT (event_id) DO NOTHING
             """,
             (
                 evt.event_id,
-                getattr(evt, "schema_version", "1.0"),
-                getattr(evt, "source", "tradingview"),
-                getattr(evt, "strategy_id", None),
+                evt.schema_version,
+                evt.source,
+                evt.strategy_id,
                 evt.event_type,
                 evt.symbol,
                 evt.timeframe,
                 evt.ts_utc,
-                payload_json,
-                datetime.now(timezone.utc),
+                payload_json,  # <-- AQUÍ
+                received_at,
             ),
         )
